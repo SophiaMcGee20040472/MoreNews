@@ -1,54 +1,126 @@
 import { useEffect, useState } from "react";
-import { Box, Heading, Text, VStack, Badge } from "@chakra-ui/react";
-import { styles } from "../styles/styles";
-import SpinLoader from "../components/ui-components/Spinner";
+import {
+  Box,
+  Heading,
+  Text,
+  VStack,
+  Badge,
+  Link,
+  Flex,
+  Select,
+} from "@chakra-ui/react";
+import SpinLoader from "../components/ui-components/Spinner/Spinner";
+
+const ORANGE = "#ff7600";
 
 const BASE_URL = "https://hacker-news.firebaseio.com/v0";
 const TOP_STORIES = `${BASE_URL}/topstories.json?print=pretty`;
 const ITEM_DETAIL = (id) => `${BASE_URL}/item/${id}.json?print=pretty`;
 
-const EventCard = ({ event }) => (
+const formatUnixTime = (ts) =>
+  new Date(ts * 1000).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+
+const sortEvents = (events, sortBy) => {
+  if (!sortBy || sortBy === "sort") return events;
+  const sorted = [...events];
+
+  switch (sortBy) {
+    case "points":
+      return sorted.sort((a, b) => (b.score || 0) - (a.score || 0));
+    case "comments":
+      return sorted.sort((a, b) => (b.descendants || 0) - (a.descendants || 0));
+    case "newest":
+      return sorted.sort((a, b) => b.time - a.time);
+    case "oldest":
+      return sorted.sort((a, b) => a.time - b.time);
+    default:
+      return events;
+  }
+};
+
+const PastEventCard = ({ event }) => (
   <Box
-    key={event.id}
-    p={4}
-    borderWidth="1px"
+    p={{ base: 3, md: 4 }}
     borderRadius="md"
-    borderColor="gray.200"
-    boxShadow="sm"
-    _hover={{ boxShadow: "md" }}
+    border={`2px solid ${ORANGE}`}
+    bg="white"
+    transition="all .2s ease"
+    _hover={{
+      bg: "#fff7f0",
+      boxShadow: "lg",
+      transform: "translateY(-2px)",
+    }}
+    w="100%"
   >
-    <Box mb={2} display="flex" alignItems="center" gap={2}>
-      <Badge bg="yellow.300">{event.type || "Story"}</Badge>
-      <Text fontSize="sm" color="gray.500">
-        By {event.by} — {new Date(event.time * 1000).toLocaleDateString()}
-      </Text>
-    </Box>
+    <Flex
+      justify="space-between"
+      align={{ base: "flex-start", md: "center" }}
+      mb={2}
+      direction={{ base: "column", md: "row" }}
+      gap={2}
+    >
+      <Heading size={{ base: "md", md: "md" }}>{event.title}</Heading>
+      <Badge
+        px={3}
+        py={1}
+        borderRadius="full"
+        fontWeight="bold"
+        bg={ORANGE}
+        color="white"
+      >
+        {event.score ?? 0} pts
+      </Badge>
+    </Flex>
 
-    <Heading size="md" mb={2}>
-      {event.title}
-    </Heading>
+    <Text fontSize="sm" color="gray.500" mb={3}>
+      {formatUnixTime(event.time)} — by {event.by}
+    </Text>
 
-    <Box fontSize="sm" color="gray.600">
-      <Text>
-        <strong>Score:</strong> {event.score}
-      </Text>
-      <Text>
-        <strong>Comments:</strong> {event.descendants ?? 0}
-      </Text>
-      {event.url && (
-        <Text mt={1} color="blue.500" _hover={{ textDecoration: "underline" }}>
-          <a href={event.url} target="_blank" rel="noopener noreferrer">
-            {event.url}
-          </a>
-        </Text>
+    <Flex gap={3} mb={2} wrap="wrap" direction={{ base: "column", sm: "row" }}>
+      {event.descendants !== undefined && (
+        <Badge
+          px={2}
+          py={1}
+          borderRadius="full"
+          fontWeight="medium"
+          bg={ORANGE}
+          color="white"
+          w="fit-content"
+        >
+          {event.descendants} comments
+        </Badge>
       )}
-    </Box>
+
+      {event.url && (
+        <Link href={event.url} isExternal color={ORANGE} fontWeight="medium">
+          Source
+        </Link>
+      )}
+    </Flex>
+
+    <Badge
+      px={2}
+      py={1}
+      borderRadius="full"
+      fontWeight="medium"
+      bg="yellow.300"
+      color="black"
+      mt={1}
+      w="fit-content"
+    >
+      {event.type || "story"}
+    </Badge>
   </Box>
 );
 
 const PastPage = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState("sort");
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -63,11 +135,8 @@ const PastPage = () => {
           })
         );
 
-        const sortedStories = stories
-          .filter(Boolean)
-          .sort((a, b) => a.time - b.time);
-
-        setEvents(sortedStories);
+        const sorted = stories.filter(Boolean);
+        setEvents(sorted);
       } catch (err) {
         console.error("Failed to fetch past events:", err);
       } finally {
@@ -80,28 +149,43 @@ const PastPage = () => {
 
   if (loading) {
     return (
-      <Box p={6} textAlign="center">
-        <SpinLoader size="xl" />
-      </Box>
+      <Flex justify="center" align="center" minH="40vh">
+        <SpinLoader />
+      </Flex>
     );
   }
 
-  if (!events.length) {
-    return (
-      <Box p={6}>
-        <Text>No past events found.</Text>
-      </Box>
-    );
-  }
+  const sortedEvents = sortEvents(events, sortBy);
 
   return (
-    <Box p={6} sx={styles.container}>
-      <Heading size="lg" mb={4}>
-        Past Events
-      </Heading>
+    <Box p={{ base: 4, md: 6 }} maxW="900px" mx="auto">
+      <Flex
+        justify="space-between"
+        align="center"
+        mb={4}
+        direction={{ base: "column", sm: "row" }}
+        gap={3}
+      >
+        <Heading size="lg" color={ORANGE}>
+          Past Events
+        </Heading>
+
+        <Select
+          border="1px solid #ff7600"
+          bg="white"
+          height="36px"
+          width={{ base: "100%", sm: "220px" }}
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+        >
+          <option value="sort">Sort By</option>
+          <option value="points">Top Rated</option>
+          <option value="comments">Most Comments</option>
+        </Select>
+      </Flex>
       <VStack align="stretch" spacing={4}>
-        {events.map((event) => (
-          <EventCard key={event.id} event={event} />
+        {sortedEvents.map((event) => (
+          <PastEventCard key={event.id} event={event} />
         ))}
       </VStack>
     </Box>

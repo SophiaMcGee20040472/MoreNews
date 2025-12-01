@@ -1,10 +1,10 @@
 import { Box, Divider } from "@chakra-ui/react";
 import { styles } from "../styles/styles";
-import NewPost from "../components/pageComponents/NewestPostComponent/NewestPost";
+import NewestPost from "../components/ui-components/NewestPost/NewestPost";
 const NewestPostPage = () => {
   return (
     <Box sx={styles.container}>
-      <NewPost />
+      <NewestPost />
       <Divider my={8} />
     </Box>
   );

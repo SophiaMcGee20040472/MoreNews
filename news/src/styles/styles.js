@@ -121,4 +121,8 @@ export const styles = {
     borderBottom: "1px solid",
     borderColor: "gray.600",
   },
+  icon:{
+    marginRight: "8px", 
+    color: "#ff7600"
+  }
 };

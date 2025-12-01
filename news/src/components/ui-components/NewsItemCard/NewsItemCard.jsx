@@ -28,7 +28,7 @@ const NewsItemCard = ({ item, rank }) => {
 
   return (
     <Card
-      border="1px solid #ff7600"
+      border="2px solid #ff7600"
       borderRadius="xl"
       bg="white"
       p={4}

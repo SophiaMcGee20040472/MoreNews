@@ -6,16 +6,18 @@ import {
 import { FaHome } from "react-icons/fa";
 import { FaAlignCenter } from "react-icons/fa6";
 import { FaNewspaper, FaClipboardList, FaUser } from "react-icons/fa";
-
+import { FaBriefcase } from "react-icons/fa";
+import { styles } from "../styles/styles";
 export const iconMap = {
-  HomeIcon: <FaHome style={{ marginRight: "8px", color: "#ff7600" }} />,           
-  NewIcon: <FaNewspaper style={{ marginRight: "8px", color: "#ff7600" }} />, 
-  PastIcon: <FaClipboardList style={{ marginRight: "8px", color: "#ff7600" }} />, 
-  ChatIcon: <ChatIcon mr={2} color="#ff7600" />,  
-  SubmitIcon: <EmailIcon style={{ marginRight: "8px", color: "#ff7600" }} />,             
-  ShowIcon: <FaAlignCenter mr={2} style={{ marginRight: "8px", color: "#ff7600" }}  />,             
-  TimeIcon: <TimeIcon mr={2} color="#ff7600" />,         
-  FaUser: <FaUser style={{ marginRight: "8px", color: "#ff7600" }} />, 
+  HomeIcon: <FaHome style={styles.icon} />,           
+  NewIcon: <FaNewspaper style={styles.icon} />, 
+  PastIcon: <FaClipboardList style={styles.icon} />, 
+  ChatIcon: <ChatIcon mr={2} style={styles.icon}/>,  
+  SubmitIcon: <EmailIcon style={styles.icon} />,             
+  ShowIcon: <FaAlignCenter mr={2} style={styles.icon}  />,             
+  TimeIcon: <TimeIcon mr={2} color="#ff7600" />,     
+  JobIcon:<FaBriefcase mr={2} style={styles.icon}/>,
+  FaUser: <FaUser style={styles.icon} />, 
 };
 
 export const navItems = [
@@ -47,7 +49,12 @@ export const navItems = [
   {
     name: "COMMENTS",
     icon: "TimeIcon", 
-    path: "/Comments",
+    path: "Comments",
+  },
+    {
+    name: "JOBS",
+    icon: "JobIcon", 
+    path: "/Jobs",
   },
   {
     name: "SUBMIT",

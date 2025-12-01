@@ -32,7 +32,7 @@ function Breadcrumbs() {
       justify="space-between"
       wrap="wrap"
       mt="60px"
-      ml={{ base: 7, md: 8 }}
+      ml={{ base: "auto", lg: "40px", xl: "auto" }}
       mb={{ base: "-30px", md: "-5px" }}
     >
       <Breadcrumb
@@ -44,11 +44,7 @@ function Breadcrumbs() {
       >
         <BreadcrumbItem>
           <BreadcrumbLink as={RouterLink} to="/home">
-            <Icon
-              as={FaHome}
-              boxSize={4}
-              ml={{ base: "-12px", md: "0px", lg: "5px", xl: "10px" }}
-            />
+            <Icon as={FaHome} boxSize={4} ml="auto" />
           </BreadcrumbLink>
         </BreadcrumbItem>
         {pathnames.map((value, index) => {
@@ -78,7 +74,7 @@ function Breadcrumbs() {
           variant="ghost"
           _hover={{ bg: "transparent", color: "orange.300" }}
           onClick={() => navigate(-1)}
-          mr={{ base: "10px", md: "25px", lg: "5%", xl: "40px" }}
+          ml='auto'
         >
           Back
         </Button>

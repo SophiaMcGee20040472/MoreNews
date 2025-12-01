@@ -1,43 +1,14 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import {
-  Box,
-  Text,
-  SimpleGrid,
-  Button,
-  HStack,
-  Flex,
-  useToast,
-  Select,
-} from "@chakra-ui/react";
-
-import NewsItemCard from "../NewsItemCardComponent/NewsItemCard";
-import Pagination from "../PaginationComponent/Pagination";
-import SpinLoader from "../../ui-components/Spinner";
-import {
-  API_ENDPOINTS,
-  formatUnixTime,
-  parseTimeString,
-} from "../../../utils/apiEndpoints";
+import { Box, Flex } from "@chakra-ui/react";
+import SpinLoader from "../../ui-components/Spinner/Spinner";
+import SelectFilter from "../../ui-components/SelectFilter/SelectFilter";
+import Pagination from "../../ui-components/Pagination/Pagination";
+import NewsGrid from "../../ui-components/NewsGrid/NewsGrid";
+import { API_ENDPOINTS, formatUnixTime, parseTimeString } from "../../../utils/apiEndpoints";
+import fetchBatches from "../../../utils/fetchBatches";
 
 const ITEMS_PER_PAGE = 50;
 const FETCH_LIMIT = 600;
-const BATCH_SIZE = 30;
-
-async function fetchBatches(ids, batchSize = BATCH_SIZE) {
-  const results = [];
-  for (let i = 0; i < ids.length; i += batchSize) {
-    const batch = ids.slice(i, i + batchSize);
-    const batchResults = await Promise.all(
-      batch.map((id) =>
-        fetch(API_ENDPOINTS.ITEM_DETAIL(id))
-          .then((r) => r.json())
-          .catch(() => null)
-      )
-    );
-    results.push(...batchResults);
-  }
-  return results;
-}
 
 function HomeComponent() {
   const [filter, setFilter] = useState("top");
@@ -46,14 +17,10 @@ function HomeComponent() {
   const [showAll, setShowAll] = useState(false);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const toast = useToast();
 
   const fetchNews = useCallback(async () => {
     setLoading(true);
-    const listUrl =
-      filter === "top"
-        ? API_ENDPOINTS.TOP_STORIES_LIST
-        : API_ENDPOINTS.NEW_STORIES_LIST;
+    const listUrl = filter === "top" ? API_ENDPOINTS.TOP_STORIES_LIST : API_ENDPOINTS.NEW_STORIES_LIST;
 
     try {
       const ids = await (await fetch(listUrl)).json();
@@ -65,9 +32,7 @@ function HomeComponent() {
           key: item.id,
           rank: i + 1,
           title: item.title,
-          site: item.url
-            ? new URL(item.url).hostname.replace("www.", "")
-            : "self.hn",
+          site: item.url ? new URL(item.url).hostname.replace("www.", "") : "self.hn",
           points: item.score || 0,
           author: item.by || "N/A",
           time: formatUnixTime(item.time),
@@ -77,20 +42,15 @@ function HomeComponent() {
 
       setData(formatted);
     } catch {
-      toast({
-        title: "Failed to Load Stories",
-        description: "Could not connect to API.",
-        status: "error",
-        duration: 4000,
-      });
+      console.error("Failed to load stories");
     } finally {
       setLoading(false);
     }
-  }, [filter, toast]);
+  }, [filter]);
 
   useEffect(() => {
-    setShowAll(false); 
-    setPage(1);        
+    setShowAll(false);
+    setPage(1);
     fetchNews();
   }, [filter, fetchNews]);
 
@@ -132,47 +92,16 @@ function HomeComponent() {
 
   return (
     <Box px={{ base: 4, md: 8 }} maxW="1200px" mx="auto">
-      <Flex
-        mb={6}
-        mt="40px"
-        flexDir={{ base: "column", md: "row" }}
-        justify="space-between"
-        gap={4}
-      >
-        <Text fontSize={{ base: "md", md: "xl" }} fontWeight="bold" color="#ff7600">
-          MN {filter === "top" ? "Top News" : "New Stories"}
-        </Text>
-
-        <HStack spacing={3} flexWrap="wrap">
-          <Select
-            border="1px solid #ff7600"
-            bg="white"
-            height="32px"
-            width={{ base: "60%", md: "200px" }}
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="sort">Select Filter</option>
-            <option value="oldest">Oldest First</option>
-            <option value="newest">Newest First</option>
-            <option value="points">Top Rated</option>
-            <option value="comments">Most Comments</option>
-          </Select>
-          <Button
-            size="sm"
-            bg="white"
-            border="1px solid #ff7600"
-            onClick={() => setShowAll((prev) => !prev)}
-          >
-            {showAll ? "Minimize View" : "Show All"}
-          </Button>
-        </HStack>
-      </Flex>
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-        {paginated.map((item, i) => (
-          <NewsItemCard key={item.key} item={item} rank={startIndex + i + 1} />
-        ))}
-      </SimpleGrid>
+      <SelectFilter
+        filter={filter}
+        setFilter={setFilter}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        showAll={showAll}
+        setShowAll={setShowAll}
+        setPage={setPage}
+      />
+      <NewsGrid items={paginated} startIndex={startIndex} />
       {!showAll && totalPages > 1 && (
         <Pagination
           currentPage={page}
