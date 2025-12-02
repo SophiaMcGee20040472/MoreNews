@@ -163,11 +163,11 @@ const PastPage = () => {
         justify="space-between"
         align="left"
         mb={4}
-        mt={{ base: '20px', sm: '40px' }}
+        mt={{ base: '20px', sm: '40px', md:'-40px' }}
         direction={{ base: "column", sm: "row" }}
         gap={3}
       >
-        <Heading size="lg" color={ORANGE}>
+        <Heading size="lg" color={ORANGE} mt={{base: '20px',md:'50px'}} mb={{base: '-10px',md:'20px'}}>
           Past Events
         </Heading>
 
@@ -175,6 +175,7 @@ const PastPage = () => {
           border="1px solid #ff7600"
           bg="white"
           height="36px"
+          mt={{base: '20px',md:'50px'}}
           width={{ base: "100%", sm: "220px" }}
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}

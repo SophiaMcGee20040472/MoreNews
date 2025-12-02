@@ -33,7 +33,7 @@ function Breadcrumbs() {
       justify="space-between"
       wrap="wrap"
       mt="60px"
-      ml={{ base: "25px", lg: "25px", xl: "35px" }}
+      ml={{ base: "20px",sm:"10%", lg: "5%", xl: "35px" }}
       mb={{ base: "-30px", md: "-5px" }}
     >
       {/* Breadcrumb navigation */}

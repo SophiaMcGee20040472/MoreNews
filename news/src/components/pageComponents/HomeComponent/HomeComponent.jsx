@@ -151,6 +151,8 @@ function HomeComponent() {
         <Flex align="center" gap={2} mt="30px" display={{ base: "none", md: "flex" }}>
           <Text>Items per page:</Text>
           <Select
+
+          borderColor='#ff7600'
             value={itemsPerPage}
             w="fit-content"
             onChange={(e) => {
