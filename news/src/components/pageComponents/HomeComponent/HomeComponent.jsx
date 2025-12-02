@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Box, Flex, Select, Text } from "@chakra-ui/react";
 import SpinLoader from "../../ui-components/Spinner/Spinner";
 import SelectFilter from "../../ui-components/SelectFilter/SelectFilter";
@@ -11,12 +11,11 @@ import {
 } from "../../../utils/apiEndpoints";
 import fetchBatches from "../../../utils/fetchBatches";
 
-// Default settings
 const DEFAULT_ITEMS_PER_PAGE = 50;
-const FETCH_LIMIT = 600;
+const FETCH_LIMIT = 500;
+const INITIAL_BATCH = 50;
 
 function HomeComponent() {
-  // State Management 
   const [filter, setFilter] = useState("top"); // Top or New stories
   const [sortBy, setSortBy] = useState("rank"); // How to sort stories
   const [page, setPage] = useState(1); // Current page number
@@ -25,9 +24,10 @@ function HomeComponent() {
   const [data, setData] = useState([]); // Story data
   const [loading, setLoading] = useState(true); // Load state
 
-  // Fetch from API 
+  const fetchedIds = useRef(new Set());
+
   const fetchNews = useCallback(async () => {
-    setLoading(true); // Start loader
+    setLoading(true);
 
     // Deciding which API endpoint to use
     const listUrl =
@@ -36,47 +36,64 @@ function HomeComponent() {
         : API_ENDPOINTS.NEW_STORIES_LIST;
 
     try {
-      // Fetch story IDs
       const ids = await (await fetch(listUrl)).json();
+      const limitedIds = ids.slice(0, FETCH_LIMIT);
 
-      // Fetch story details in batches
-      const items = await fetchBatches(ids.slice(0, FETCH_LIMIT));
+      const firstBatchIds = limitedIds.slice(0, INITIAL_BATCH);
+      const firstBatch = await fetchBatches(firstBatchIds);
 
-      // Format stories
-      const formatted = items
-        .filter((item) => item?.title) // This is removing items with no titles
-        .map((item, i) => ({
-          key: item.id,
-          rank: i + 1,
-          title: item.title,
-          site: item.url ? new URL(item.url).hostname.replace("www.", "") : "self.hn", 
-          points: item.score || 0,
-          author: item.by || "N/A",
-          time: formatUnixTime(item.time),
-          comments: item.descendants ?? 0,
-          url: item.url,
-        }));
+      const formatItems = (items) =>
+        items
+          .filter((item) => item?.title) // This is removing items with no titles
+          .map((item, i) => ({
+            key: item.id,
+            rank: i + 1,
+            title: item.title,
+            site: item.url
+              ? new URL(item.url).hostname.replace("www.", "")
+              : "self.hn",
+            points: item.score || 0,
+            author: item.by || "N/A",
+            time: formatUnixTime(item.time),
+            comments: item.descendants ?? 0,
+            url: item.url,
+          }));
 
-      setData(formatted); // Save formatted data
+      firstBatch.forEach((item) => fetchedIds.current.add(item.id));
+      setData(formatItems(firstBatch));
+      setLoading(false);
+
+      const remainingIds = limitedIds.slice(INITIAL_BATCH);
+      const chunkSize = 50;
+
+      for (let i = 0; i < remainingIds.length; i += chunkSize) {
+        const chunk = remainingIds.slice(i, i + chunkSize);
+        const results = await fetchBatches(chunk);
+
+        const newItems = results.filter(
+          (item) => !fetchedIds.current.has(item.id)
+        );
+        newItems.forEach((item) => fetchedIds.current.add(item.id));
+
+        setData((prev) => [...prev, ...formatItems(newItems)]);
+      }
     } catch {
       console.error("Failed to load stories");
-    } finally {
       setLoading(false); // Stopping loader
     }
   }, [filter]);
 
-  // Fetches news when filter might changes 
+  // Fetches news when filter might changes
   useEffect(() => {
-    setShowAll(false); // Reset showAll
-    setPage(1); // Reset page
+    setShowAll(false);
+    setPage(1);
     fetchNews();
   }, [filter, fetchNews]);
 
   // Resets page if showAll has taken effect
   useEffect(() => {
-    if (showAll) setPage(1);
-  }, [showAll]);
-
+    setPage(1);
+  }, [showAll, itemsPerPage]);
   //  Sort stories
   const sorted = useMemo(() => {
     const copy = [...data];
@@ -96,7 +113,6 @@ function HomeComponent() {
       }
     });
   }, [data, sortBy]);
-
   //Pagination
   //got a little help from ai here as I kept confusing myself.
   const totalPages = Math.ceil(sorted.length / itemsPerPage);
@@ -105,8 +121,12 @@ function HomeComponent() {
     : sorted.slice((page - 1) * itemsPerPage, page * itemsPerPage);
   const startIndex = showAll ? 0 : (page - 1) * itemsPerPage;
 
+  const startItem = showAll ? 1 : startIndex + 1;
+  const endItem = showAll
+    ? sorted.length
+    : Math.min(page * itemsPerPage, sorted.length);
   // Showing custom made Spinner I decided to make a spinner on a tv icon gotten from reactIcons
-  if (loading) {
+  if (loading && data.length === 0) {
     return (
       <Flex justify="center" align="center" minH="40vh">
         <SpinLoader />
@@ -128,12 +148,17 @@ function HomeComponent() {
       />
 
       <NewsGrid items={paginated} startIndex={startIndex} />
-
       {/* Pagination & controls */}
-      <Flex mt={4} justify="space-between" align="center" flexWrap="wrap" gap={2}>
-        {/* Item count - hidden on small screens */}
+      <Flex
+        mt={4}
+        justify="space-between"
+        align="center"
+        flexWrap="wrap"
+        gap={2}
+      >
+        {/* Item range display */}
         <Text mt="30px" display={{ base: "none", md: "block" }}>
-          {paginated.length} of {sorted.length} items
+          {startItem}–{endItem} of {sorted.length} items
         </Text>
 
         {/* Pagination - only if not showing all */}
@@ -146,19 +171,19 @@ function HomeComponent() {
             handlePageChange={(p) => setPage(p)}
           />
         )}
-
         {/* Items per page selected - hidden for small screens */}
-        <Flex align="center" gap={2} mt="30px" display={{ base: "none", md: "flex" }}>
+        <Flex
+          align="center"
+          gap={2}
+          mt="30px"
+          display={{ base: "none", md: "flex" }}
+        >
           <Text>Items per page:</Text>
           <Select
-
-          borderColor='#ff7600'
+            borderColor="#ff7600"
             value={itemsPerPage}
             w="fit-content"
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setPage(1); // Reset page when items per page changes
-            }}
+            onChange={(e) => setItemsPerPage(Number(e.target.value))}
           >
             {[10, 25, 50, 100].map((num) => (
               <option key={num} value={num}>

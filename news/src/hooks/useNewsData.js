@@ -1,13 +1,19 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { API_ENDPOINTS, formatUnixTime } from "../utils/apiEndpoints";
-import { fetchAll, getHost, applySort } from "../utils/helper";
+import { getHost, applySort } from "../utils/helper";
+import fetchBatches from "../utils/fetchBatches";
 
-const FETCH_LIMIT = 600; // Maximum number of news items to fetch
+const FETCH_LIMIT = 600; 
+const INITIAL_BATCH = 50; // Number of stories to fetch immediately
+const CHUNK_SIZE = 50; // Batch size for progressive loading
 
 // Custom hook to fetch and manage news data
 export default function useNewsData(filter, sortBy, toast) {
   const [data, setData] = useState([]); // Holds the fetched news stories
   const [loading, setLoading] = useState(true); // Loading state
+
+  // Ref to track already fetched story IDs
+  const fetchedIds = useRef(new Set());
 
   // Function to fetch news from API
   const fetchNews = useCallback(async () => {
@@ -22,34 +28,51 @@ export default function useNewsData(filter, sortBy, toast) {
     try {
       // Fetch the list of story IDs
       const ids = await (await fetch(listUrl)).json();
+      const limitedIds = ids.slice(0, FETCH_LIMIT);
 
-      // Fetch story details in batches using helper function
-      const items = await fetchAll(
-        ids.slice(0, FETCH_LIMIT), // Limit number of stories
-        20, // Batch size for fetching
-        async (id) => await fetch(API_ENDPOINTS.ITEM_DETAIL(id)).then((r) => r.json())
-      );
+      // --- Step 1: Fetch initial batch immediately ---
+      const firstBatchIds = limitedIds.slice(0, INITIAL_BATCH);
+      const firstBatch = await fetchBatches(firstBatchIds);
 
-      // Format the stories for UI
-      const formatted = items
-        .filter((item) => item?.title) // Remove items without titles
-        .map((item, i) => ({
-          key: item.id, 
-          rank: i + 1, 
-          unix: item.time * 1000, // Unix timestamp in ms
-          time: formatUnixTime(item.time), // Human-readable time
-          title: item.title,
-          site: getHost(item.url), // Extract hostname from URL
-          points: item.score || 0, 
-          comments: item.descendants ?? 0, // Number of comments
-          author: item.by || "N/A",
-          url: item.url, 
-        }));
+      // Format stories for UI
+      const formatItems = (items) =>
+        items
+          .filter((item) => item?.title) // Remove items without titles
+          .map((item, i) => ({
+            key: item.id,
+            rank: i + 1,
+            unix: item.time * 1000, // Unix timestamp in ms
+            time: formatUnixTime(item.time), // Human-readable time
+            title: item.title,
+            site: getHost(item.url), // Extract hostname from URL
+            points: item.score || 0,
+            comments: item.descendants ?? 0, // Number of comments
+            author: item.by || "N/A",
+            url: item.url,
+          }));
 
-      // Sort stories based on current sort option
-      const sorted = applySort(formatted, sortBy);
+      // Mark first batch IDs as fetched
+      firstBatch.forEach(item => fetchedIds.current.add(item.id));
 
-      setData(sorted); // Update state with sorted stories
+      setData(formatItems(firstBatch)); // Set initial batch
+      setLoading(false); // Stop loader after first batch
+
+      // --- Step 2: Load remaining batches progressively ---
+      const remainingIds = limitedIds.slice(INITIAL_BATCH);
+      for (let i = 0; i < remainingIds.length; i += CHUNK_SIZE) {
+        const chunk = remainingIds.slice(i, i + CHUNK_SIZE);
+        const results = await fetchBatches(chunk);
+
+        // Only append items that haven't been fetched yet
+        const newItems = results.filter(item => !fetchedIds.current.has(item.id));
+        newItems.forEach(item => fetchedIds.current.add(item.id));
+
+        // Append to existing data and apply current sort
+        setData(prev => {
+          const combined = [...prev, ...formatItems(newItems)];
+          return applySort(combined, sortBy);
+        });
+      }
     } catch {
       // Show error toast if API fails
       toast({
@@ -58,8 +81,7 @@ export default function useNewsData(filter, sortBy, toast) {
         status: "error",
         duration: 4000,
       });
-    } finally {
-      setLoading(false); // Stop loading spinner
+      setLoading(false);
     }
   }, [filter, sortBy, toast]);
 
