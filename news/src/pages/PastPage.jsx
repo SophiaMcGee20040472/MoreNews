@@ -161,8 +161,9 @@ const PastPage = () => {
     <Box p={{ base: 4, md: 6 }} maxW="900px" mx="auto">
       <Flex
         justify="space-between"
-        align="center"
+        align="left"
         mb={4}
+        mt={{ base: '20px', sm: '40px' }}
         direction={{ base: "column", sm: "row" }}
         gap={3}
       >

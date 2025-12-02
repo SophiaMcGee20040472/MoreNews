@@ -1,17 +1,11 @@
 import { Button } from "@chakra-ui/react";
+import { styles } from "../../../styles/styles";
 
 function ToggleButton({ showAll, setShowAll, setPage }) {
   return (
     <Button
+    sx={styles.buttonStyle}
       size="sm"
-      bg="#ff7600"
-      color="white"
-      border="1px solid #ff7600"
-      _hover={{
-        bg: "white",
-        color: "black",
-        border: "1px solid #ff7600",
-      }}
       onClick={() => {
         setShowAll((prev) => !prev);
         setPage(1);

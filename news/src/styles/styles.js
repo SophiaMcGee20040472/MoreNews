@@ -1,6 +1,5 @@
 export const styles = {
-
-    FlexStyle: {
+  FlexStyle: {
     minH: "100vh",
     mt: { base: "-20px", md: "-80px" },
     justify: "flex-start",
@@ -121,8 +120,28 @@ export const styles = {
     borderBottom: "1px solid",
     borderColor: "gray.600",
   },
-  icon:{
-    marginRight: "8px", 
-    color: "#ff7600"
-  }
+  icon: {
+    marginRight: "8px",
+    color: "#ff7600",
+  },
+  buttonStyle:{
+          size:"sm",
+      bg:"#ff7600",
+      color:"white",
+      border:"1px solid #ff7600",
+      _hover:{
+        bg: "white",
+        color: "black",
+        border: "1px solid #ff7600",
+      }
+  },
+  spinnerStyle: {
+    thickness: "3px",
+    marginRight: "12px",
+    marginLeft: "-12px",
+    marginTop: "10px",
+    emptyColor: "gray.200",
+    color: "#ff7600",
+    size: "md",
+  },
 };

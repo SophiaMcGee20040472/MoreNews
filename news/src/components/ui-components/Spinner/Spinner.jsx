@@ -1,5 +1,6 @@
 import { Box, Spinner, Text, VStack, Icon} from "@chakra-ui/react";
 import { TbDeviceTvOld } from "react-icons/tb";
+import { styles } from "../../../styles/styles";
 
 
 const SpinLoader = () => {
@@ -7,15 +8,10 @@ const SpinLoader = () => {
     <VStack spacing={4} align="center" justify="center" py={10}>
       <Box position="relative" display="inline-flex">
         <Spinner
-          thickness="3px"
-          marginRight='12px'
-          marginLeft='-12px'
-          marginTop='10px'
+        sx={styles.spinnerStyle}
           speed="0.9s"
-          emptyColor="gray.200"
-          color="#ff7600"
-          size="md"
         />
+          {/* I added a Tv icon and had a spinner show centred in the middle */}
         <Icon
           as={TbDeviceTvOld}
           boxSize='100px'

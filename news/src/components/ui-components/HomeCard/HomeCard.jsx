@@ -40,7 +40,7 @@ async function fetchBatches(ids, batchSize = BATCH_SIZE) {
 }
 
 function HomeCard() {
-  const [filter, setFilter] = useState("top");
+  const [filter, ] = useState("top");
   const [sortBy, setSortBy] = useState("rank");
   const [page, setPage] = useState(1);
   const [showAll, setShowAll] = useState(false);

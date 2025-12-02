@@ -3,16 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@chakra-ui/react": "^2.8.0",
-    "@chakra-ui/icons": "^2.0.17",
+    "@chakra-ui/icons": "^2.2.4",
+    "@chakra-ui/react": "^2.10.9",
     "@chakra-ui/system": "^2.6.2",
+    "@chakra-ui/utils": "^2.2.5",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
-    "framer-motion": "^12.23.24",
+    "framer-motion": "^12.23.25",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-icons": "^5.5.0",
@@ -24,12 +25,15 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
-      "react-app/jest"
+      "react-app/jest",
+      "plugin:storybook/recommended"
     ]
   },
   "browserslist": {
@@ -45,6 +49,15 @@
     ]
   },
   "devDependencies": {
-    "@types/react-router-dom": "^5.3.3"
+    "@storybook/addon-a11y": "^10.1.2",
+    "@storybook/addon-docs": "^10.1.2",
+    "@storybook/addon-onboarding": "^10.1.2",
+    "@storybook/preset-create-react-app": "^10.1.2",
+    "@storybook/react-webpack5": "^10.1.2",
+    "@types/react-router-dom": "^5.3.3",
+    "eslint-plugin-storybook": "^10.1.2",
+    "prop-types": "^15.8.1",
+    "storybook": "^10.1.2",
+    "webpack": "^5.103.0"
   }
 }

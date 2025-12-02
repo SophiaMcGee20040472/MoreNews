@@ -8,6 +8,8 @@ export const API_ENDPOINTS = {
   JOB_IDS: `${BASE_URL}/jobstories.json?print=pretty`,
   ITEM_DETAIL: (id) => `${BASE_URL}/item/${id}.json?print=pretty`,
 };
+// got help here from stackoverflow just to break down the hours and minutes then rewrote it to work for me.
+// reference from https://stackoverflow.com/questions/19540077/converting-unix-time-to-minutes-ago-in-javascript
 export const formatUnixTime = (unixTime) => {
   const now = Date.now() / 1000;
   const seconds = now - unixTime;
@@ -24,6 +26,7 @@ export const formatUnixTime = (unixTime) => {
   return `${Math.floor(days)} days ago`;
 };
 
+//took inspiration from https://stackoverflow.com/questions/141348/how-to-parse-a-time-into-a-date-object-from-user-input-in-javascript and simplified.
 export const parseTimeString = (timeStr) => {
   const parts = timeStr.split(" ");
   const value = parseInt(parts[0], 10);
